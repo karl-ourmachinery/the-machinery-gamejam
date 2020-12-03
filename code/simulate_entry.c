@@ -1,10 +1,12 @@
-static struct tm_api_registry_api *tm_api_registry_api;
-static struct tm_simulate_context_api *tm_simulate_context_api;
-static struct tm_input_api *tm_input_api;
-static struct tm_ui_api *tm_ui_api;
-static struct tm_error_api *tm_error_api;
-static struct tm_entity_api *tm_entity_api;
-static struct tm_application_api *tm_application_api;
+#include "api_loader.inl"
+
+TM_LOAD_APIS(tm_load_apis,
+    tm_simulate_context_api,
+    tm_input_api,
+    tm_ui_api,
+    tm_error_api,
+    tm_entity_api,
+    tm_application_api)
 
 #include <foundation/allocator.h>
 #include <foundation/api_registry.h>
@@ -206,12 +208,6 @@ static tm_simulate_entry_i simulate_entry_i = {
 
 TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
 {
-    tm_api_registry_api = reg;
-    tm_simulate_context_api = reg->get(TM_SIMULATE_CONTEXT_API_NAME);
-    tm_input_api = reg->get(TM_INPUT_API_NAME);
-    tm_ui_api = reg->get(TM_UI_API_NAME);
-    tm_application_api = reg->get(TM_APPLICATION_API_NAME);
-    tm_error_api = reg->get(TM_ERROR_API_NAME);
-    tm_entity_api = reg->get(TM_ENTITY_API_NAME);
+    tm_load_apis(reg);
     tm_add_or_remove_implementation(reg, load, TM_SIMULATE_ENTRY_INTERFACE_NAME, &simulate_entry_i);
 }
