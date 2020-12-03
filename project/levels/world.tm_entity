@@ -204,5 +204,108 @@ children: [
 		]
 		sort_order: 103
 	}
+	{
+		__uuid: "3efe9470-c9b1-febb-12b9-ae4f46ee694a"
+		name: "sculpted_box"
+		components: [
+			{
+				__type: "tm_transform_component"
+				__uuid: "5d36b888-19a9-cf36-48fb-f0a9465473ba"
+				position: {
+					__uuid: "c2c988e1-b757-08ed-29e0-7123b37470dd"
+				}
+				rotation: {
+					__uuid: "90d149dd-0bc4-eb33-dbac-c00b6ee0703b"
+				}
+				scale: {
+					__uuid: "a1104b66-5de1-5636-3b77-6295ea28dc81"
+				}
+			}
+			{
+				__type: "tm_link_component"
+				__uuid: "c5d2b495-ee8f-ccdc-e3fb-d166dfaf4bf8"
+				position: {
+					__uuid: "5085dbb1-d140-4e15-3984-b9c90a2453af"
+					x: 13.03762626647949
+					y: 7.529826641082764
+					z: -16.46642875671387
+				}
+				rotation: {
+					__uuid: "69712b4e-b595-6630-7081-7a8183c60b5d"
+				}
+				scale: {
+					__uuid: "5a089ae5-997e-3b01-22e2-022467450319"
+				}
+			}
+			{
+				__type: "tm_sculpt_component"
+				__uuid: "88503d04-76e3-3c36-e0d4-0d1ced7c8fd3"
+				num_boxes: 3
+				boxes_pos: "dbe360470b7985ef"
+				boxes_rot: "c0a5cc8e239fa020"
+				boxes_size: "dfedef75c231e594"
+				boxes_color: "7d5837328b9d83bc"
+				boxes_parent: "6c9a7a0560404f9b"
+				selection: {
+					__uuid: "974a367a-779a-ec88-ae29-a97e15031c7b"
+					indices: "f52ab5e6fe56c909"
+					position: {
+						__uuid: "0a1004da-fb4d-d335-cbbe-9017e1568163"
+						y: 0.5
+					}
+					rotation: {
+						__uuid: "728831d2-1f23-7565-17d1-f4a234f29e41"
+					}
+					extent: {
+						__uuid: "b7d397e8-6c00-295e-54fd-0918b8bcaf7d"
+						x: 0.5
+						y: 0.5
+						z: 0.5
+					}
+					color: {
+						__uuid: "b292c8d4-5332-1706-85d1-67b3a53793b4"
+					}
+				}
+				draw_color: {
+					__uuid: "acd221d7-8002-da49-1cc1-ee1a174f6003"
+					r: 0.1544438600540161
+					g: 0.04977978393435478
+					b: 0.01418252848088741
+				}
+			}
+			{
+				__type: "tm_physics_shape_component"
+				__uuid: "2e24fff6-698d-5b4a-98cd-8b630f4bcbbe"
+				type: 4
+				shape: {
+					__type: "tm_physics_shape_box"
+					__uuid: "e609a6d3-b0c8-f82e-5d09-c2eead150bcd"
+					half_extent: {
+						__uuid: "4bee05e1-8868-340d-bcfc-2387ea97062f"
+						x: 1
+						y: 1
+						z: 1
+					}
+				}
+			}
+			{
+				__type: "tm_physics_body_component"
+				__uuid: "fbeeb6b5-0adc-e6bd-c4e4-09e92e734678"
+				center_of_mass: {
+					__uuid: "f24a9f32-29b8-4a7f-8af5-d8d5bb9485ca"
+				}
+				inertia_tensor: {
+					__uuid: "7ebafdbb-7669-f957-52d4-1095e06a61c4"
+					x: 0.6666641235351563
+					y: 0.6666679382324219
+					z: 0.6666641235351563
+				}
+				inertia_tensor_rotation: {
+					__uuid: "849c81f8-ad58-747a-6323-e6b73c5a5970"
+				}
+			}
+		]
+		sort_order: 104
+	}
 ]
 __asset_uuid: "819bace2-4c88-c47e-ae54-552b7c88ed5f"
