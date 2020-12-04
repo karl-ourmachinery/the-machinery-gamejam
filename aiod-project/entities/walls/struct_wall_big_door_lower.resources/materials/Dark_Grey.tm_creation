@@ -1,0 +1,71 @@
+__type: "tm_creation_graph"
+__uuid: "60ce4fba-22e4-f34a-7be3-0883140ea158"
+__prototype_type: "tm_creation_graph"
+__prototype_uuid: "ac7a9eda-f140-837a-ae1d-6d1ade0472ae"
+graph: {
+	__uuid: "43e8742b-6a46-665d-8f17-3d5d8a24a83a"
+	__prototype_type: "tm_graph"
+	__prototype_uuid: "e0657bbe-dac2-b0a9-3387-4a8490c89176"
+	interface: {
+		__uuid: "2bc651fa-c31f-6d54-46bb-a80eec5d6494"
+		__prototype_type: "tm_graph_interface"
+		__prototype_uuid: "0323c374-e610-d3a9-25b1-0216ead37043"
+		inputs__instantiated: [
+			{
+				__uuid: "036b11a2-e214-e8f4-89e4-91bee4ebd14f"
+				__prototype_type: "tm_graph_input"
+				__prototype_uuid: "c342ebfa-25a7-b4a4-965a-5049d5e7f1c0"
+				value: {
+					__type: "tm_dcc_asset_material_node_settings"
+					__uuid: "c6fe9074-962d-d850-8a4c-4d1eddb36453"
+					dcc_asset: "0abe78b5-42e2-8143-cb27-ec29076a100b"
+					material: "0e51373d-7c07-afa2-6d5e-3e20982e60bc"
+				}
+			}
+			{
+				__uuid: "359ff520-56cf-22a9-77c9-1b3420afdc39"
+				__prototype_type: "tm_graph_input"
+				__prototype_uuid: "42b5a86f-3bbf-5550-67d2-e0238e3da275"
+				value: {
+					__type: "tm_color_rgba"
+					__uuid: "acad5163-69f6-7318-d37b-23b1148e1de5"
+					__prototype_type: "tm_color_rgba"
+					__prototype_uuid: "7c06e1ca-c946-34b9-8c14-558c2cc4a73b"
+					r: 0.6118000149726868
+					g: 0.6118000149726868
+					b: 0.6118000149726868
+				}
+			}
+			{
+				__uuid: "0229c1ca-5017-1f20-5675-e4510f3c6f74"
+				__prototype_type: "tm_graph_input"
+				__prototype_uuid: "c9fab5fe-1f36-56b4-7a72-140e8766c664"
+				value: {
+					__type: "tm_float"
+					__uuid: "2c89957a-cd45-2a4c-48de-650f88684c73"
+					__prototype_type: "tm_float"
+					__prototype_uuid: "0e1db22d-3f81-2886-a667-80c4b304c3b9"
+				}
+			}
+		]
+		cached_node_result__instantiated: [
+			{
+				__uuid: "54efc45e-889a-b58a-8e4d-c2a8fb943990"
+				__prototype_type: "tm_graph_cached_node_result"
+				__prototype_uuid: "e104c843-70a9-86c9-5e7f-a63212c7a8fa"
+				node: "49cbc4af-8314-05fa-fabc-00884be0de7a"
+				validity_hash: "b681c39325ca4570"
+				object: {
+					__type: "tm_shader_system_compiled_result"
+					__uuid: "d55a02bf-8c6b-9dab-afd6-681618c3c745"
+					name: "b681c39325ca4570"
+					buffer: "e4f5456316c938dc"
+				}
+			}
+		]
+	}
+}
+__asset_uuid: "609692dc-6518-b69f-13d3-c6af0507b2d5"
+__asset_tags: [
+	"672a73adabfebcc2"
+]
