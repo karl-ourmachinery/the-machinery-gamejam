@@ -3560,6 +3560,35 @@
 		]
 	}
 	{
+		name: "tm_interactable_component"
+		properties: [
+			{
+				name: "desc"
+				type: "subobject"
+				type_hash: "8944e0b1cefd4756"
+			}
+		]
+		default: {
+		}
+	}
+	{
+		name: "tm_interactable_lever"
+		properties: [
+			{
+				name: "handle"
+				type: "reference"
+				type_hash: "ff156da2e01c4a3d"
+			}
+			{
+				name: "target"
+				type: "reference"
+				type_hash: "ff156da2e01c4a3d"
+			}
+		]
+		default: {
+		}
+	}
+	{
 		name: "tm_keyboard_item"
 		properties: [
 			{
@@ -4042,6 +4071,51 @@
 			}
 			{
 				name: "continuous"
+				type: "bool"
+			}
+		]
+	}
+	{
+		name: "tm_physx_visualization_parameters"
+		properties: [
+			{
+				name: "visualize"
+				type: "bool"
+			}
+			{
+				name: "scale"
+				type: "float"
+			}
+			{
+				name: "body_axes"
+				type: "bool"
+			}
+			{
+				name: "contact_point"
+				type: "bool"
+			}
+			{
+				name: "actor_axes"
+				type: "bool"
+			}
+			{
+				name: "collision_aabbs"
+				type: "bool"
+			}
+			{
+				name: "collision_shapes"
+				type: "bool"
+			}
+			{
+				name: "collision_dynamic"
+				type: "bool"
+			}
+			{
+				name: "joint_local_frames"
+				type: "bool"
+			}
+			{
+				name: "joint_limits"
 				type: "bool"
 			}
 		]

@@ -8,7 +8,7 @@ newoption {
     description = "Force use of CLANG for Windows builds"
 }
 
-workspace "simulate_entry"
+workspace "interactable_component"
     configurations {"Debug", "Release"}
     language "C++"
     cppdialect "C++11"
@@ -69,9 +69,9 @@ filter "configurations:Release"
     defines { "TM_CONFIGURATION_RELEASE" }
     optimize "On"
 
-project "simulate_entry"
-    location "build/simulate_entry"
-    targetname "tm_simulate_entry"
+project "interactable_component"
+    location "build/interactable_component"
+    targetname "tm_interactable_component"
     kind "SharedLib"
     language "C++"
     files {"*.inl", "*.h", "*.c"}

@@ -489,11 +489,12 @@ children: [
 						}
 					}
 					{
-						__type: "tm_tag_component"
-						__uuid: "f14a0ffc-4598-0570-5789-f06fd3291a7a"
-						tags: [
-							"82288f97-8fce-3667-0a77-3ad2db977aa6"
-						]
+						__type: "tm_interactable_component"
+						__uuid: "1c750317-6a0e-55e7-5252-41973d68b893"
+						desc: {
+							__type: "tm_interactable_lever"
+							__uuid: "79693fec-f276-83a9-74a7-f40bb5de7637"
+						}
 					}
 				]
 				sort_order: 101
