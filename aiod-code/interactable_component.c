@@ -17,6 +17,8 @@ TM_LOAD_APIS(tm_load_apis,
 #include <plugins/editor_views/properties.h>
 #include <plugins/the_machinery_shared/component_interfaces/editor_ui_interface.h>
 
+#include <foundation/rect.inl>
+
 static const char *component_category(void)
 {
     return TM_LOCALIZE("Interactables");
@@ -43,8 +45,13 @@ static float component_properties_ui(struct tm_properties_ui_args_t *args, tm_re
         TM_LOCALIZE("Lever"),
     };
 
+    const tm_rect_t label_r = tm_rect_split_left(item_rect, args->metrics[TM_PROPERTIES_METRIC_LABEL_WIDTH], args->metrics[TM_PROPERTIES_METRIC_MARGIN], 0);
+    const tm_rect_t dropdown_r = tm_rect_split_left(item_rect, args->metrics[TM_PROPERTIES_METRIC_LABEL_WIDTH], args->metrics[TM_PROPERTIES_METRIC_MARGIN], 1);
+    
+    tm_properties_view_api->ui_label(args, label_r, TM_LOCALIZE("Type"), 0);
+    
     const tm_ui_dropdown_t d = {
-        .rect = item_rect,
+        .rect = dropdown_r,
         .items = type_names,
         .num_items = TM_ARRAY_COUNT(type_names),
     };
@@ -84,8 +91,8 @@ static float component_properties_ui(struct tm_properties_ui_args_t *args, tm_re
         args->undo_stack->add(args->undo_stack->inst, args->tt, undo_scope);
     }
 
-    item_rect.y += item_rect.h;
-    item_rect.y = tm_properties_view_api->ui_subobject(args, item_rect, TM_LOCALIZE("Desc"), 0, component_id, TM_TT_PROP__INTERACTABLE_COMPONENT__DESC, indent, true);
+    item_rect.y += item_rect.h + args->metrics[TM_PROPERTIES_METRIC_MARGIN];
+    item_rect.y = tm_properties_view_api->ui_object(args, item_rect, desc, indent);
     return item_rect.y;
 }
 

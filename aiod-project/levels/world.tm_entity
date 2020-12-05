@@ -1016,9 +1016,7 @@ children: [
 								__prototype_uuid: "1c750317-6a0e-55e7-5252-41973d68b893"
 								desc: {
 									__type: "tm_interactable_lever"
-									__uuid: "af75ff61-6285-0a6f-e072-795ee980c413"
-									__prototype_type: "tm_interactable_lever"
-									__prototype_uuid: "79693fec-f276-83a9-74a7-f40bb5de7637"
+									__uuid: "e3170fb3-5ac6-4b6c-53b1-8e0402b65579"
 									handle: "7dc84219-a5d3-0107-f935-13f27cab60e0"
 									target: "893db212-e1c9-e770-06c3-21d31216516c"
 								}

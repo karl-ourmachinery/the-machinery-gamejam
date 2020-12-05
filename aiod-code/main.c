@@ -60,6 +60,7 @@ struct tm_simulate_state_o {
     
     float door_end_angle;
     double door_start_open_time;
+    double last_standing_time;
 
     float lever_end_angle;
     TM_PAD(4);
@@ -217,6 +218,8 @@ static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     if (!TM_ASSERT(player_mover, tm_error_api->def, "Invalid player"))
         return;
 
+    if (player_mover->is_standing)
+        state->last_standing_time = args->time;
 
     // Process input if mouse is captured.
     if (state->mouse_captured) {
@@ -258,8 +261,11 @@ static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
         tm_entity_set_local_rotation(state->player_camera, tm_quaternion_mul(pitchq, yawq), h);
 
         // Jump
-        if (state->input.held_keys[TM_INPUT_KEYBOARD_ITEM_SPACE] && player_mover->is_standing)
+        const bool can_jump = args->time < state->last_standing_time + 0.2f;
+        if (can_jump && state->input.held_keys[TM_INPUT_KEYBOARD_ITEM_SPACE]) {
             player_mover->velocity.y = 3.5;
+            state->last_standing_time = 0;
+        }
     }
 
     // Modified if the raycast below hits the box.
