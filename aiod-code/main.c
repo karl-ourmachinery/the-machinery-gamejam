@@ -1,33 +1,44 @@
 #include "api_loader.inl"
 
 TM_LOAD_APIS(tm_load_apis,
-    tm_simulate_context_api,
-    tm_input_api,
-    tm_ui_api,
-    tm_error_api,
-    tm_entity_api,
     tm_application_api,
     tm_draw2d_api,
+    tm_entity_api,
+    tm_error_api,
+    tm_input_api,
+    tm_physics_collision_api,
+    tm_physx_scene_api,
+    tm_simulate_context_api,
+    tm_tag_component_api,
     tm_temp_allocator_api,
-    tm_physx_scene_api);
+    tm_temp_allocator_api,
+    tm_transform_component_api,
+    tm_ui_api
+);
 
 #include "interactable_component.h"
 
 #include <foundation/allocator.h>
 #include <foundation/api_registry.h>
-#include <foundation/input.h>
 #include <foundation/application.h>
+#include <foundation/error.h>
+#include <foundation/input.h>
 #include <foundation/temp_allocator.h>
+#include <foundation/the_truth.h>
 
-#include <plugins/simulate/simulate_entry.h>
-#include <plugins/simulate_common/simulate_context.h>
-#include <plugins/ui/ui.h>
-#include <plugins/ui/draw2d.h>
 #include <plugins/entity/entity.h>
+#include <plugins/entity/tag_component.h>
+#include <plugins/entity/transform_component.h>
+#include <plugins/physics/physics_collision.h>
 #include <plugins/physics/physics_mover_component.h>
 #include <plugins/physx/physx_scene.h>
+#include <plugins/simulate/simulate_entry.h>
+#include <plugins/simulate_common/simulate_context.h>
+#include <plugins/ui/draw2d.h>
+#include <plugins/ui/ui.h>
 
-#include <plugins/simulate/simulate_helpers.inl>
+#include <foundation/carray.inl>
+#include <foundation/math.inl>
 
 typedef struct input_state_t {
     bool held_keys[TM_INPUT_KEYBOARD_ITEM_COUNT];
@@ -36,10 +47,6 @@ typedef struct input_state_t {
     TM_PAD(1);
     tm_vec2_t mouse_delta;
 } input_state_t;
-
-typedef struct component_indices_t {
-    uint32_t interactable;
-} component_indices_t;
 
 struct tm_simulate_state_o {
     tm_entity_t player;
@@ -67,37 +74,50 @@ struct tm_simulate_state_o {
     double lever_start_move_time;
 
     uint64_t processed_events;
-    tm_simulate_helpers_context_t h;
     tm_entity_context_o *entity_ctx;
+    tm_the_truth_o *tt;
     tm_simulate_context_o *simulate_ctx;
     tm_allocator_i *allocator;
 
-    component_indices_t comp_idx;
+    tm_transform_component_manager_o *trans_mgr;
+    tm_tag_component_manager_o *tag_mgr;
+
+    uint32_t transform_comp_idx;
+    uint32_t tag_comp_idx;
+    uint32_t interact_comp_idx;
+
     TM_PAD(4);
 } tm_gameplay_state_o;
 
-static tm_simulate_state_o *start(struct tm_allocator_i *allocator, tm_entity_context_o *entity_ctx,
-    tm_simulate_context_o *simulate_ctx)
+static tm_simulate_state_o *start(tm_simulate_start_args_t *args)
 {
-    tm_simulate_state_o *state = tm_alloc(allocator, sizeof(*state));
+    tm_simulate_state_o *state = tm_alloc(args->allocator, sizeof(*state));
     *state = (tm_simulate_state_o) {
-        .allocator = allocator,
-        .entity_ctx = entity_ctx,
-        .simulate_ctx = simulate_ctx,
+        .allocator = args->allocator,
+        .entity_ctx = args->entity_ctx,
+        .simulate_ctx = args->simulate_ctx,
+        .tt = args->tt,
     };
 
-    tm_simulate_helpers_context_t *h = &state->h;
-    tm_simulate_helpers_init_context(tm_api_registry_api, h, entity_ctx);
+    state->interact_comp_idx = tm_entity_api->lookup_component(state->entity_ctx, TM_TT_TYPE_HASH__INTERACTABLE_COMPONENT);
+    state->tag_comp_idx = tm_entity_api->lookup_component(state->entity_ctx, TM_TT_TYPE_HASH__TAG_COMPONENT);
+    state->transform_comp_idx = tm_entity_api->lookup_component(state->entity_ctx, TM_TT_TYPE_HASH__TRANSFORM_COMPONENT);
 
-    state->comp_idx.interactable = tm_entity_api->lookup_component(entity_ctx, TM_TT_TYPE_HASH__INTERACTABLE_COMPONENT);
-
-    state->player_camera = tm_entity_find_with_tag(TM_STATIC_HASH("player_camera", 0x689cd442a211fda4ULL), h);
-    state->player = tm_entity_find_with_tag(TM_STATIC_HASH("player", 0xafff68de8a0598dfULL), h);
-    tm_simulate_context_api->set_camera(simulate_ctx, state->player_camera);
+    state->tag_mgr = (tm_tag_component_manager_o*)tm_entity_api->component_manager(state->entity_ctx, state->tag_comp_idx);
+    state->trans_mgr = (tm_transform_component_manager_o*)tm_entity_api->component_manager(state->entity_ctx, state->transform_comp_idx);
+    state->player = tm_tag_component_api->find_first(state->tag_mgr, TM_STATIC_HASH("player", 0xafff68de8a0598dfULL));
+    state->player_camera = tm_tag_component_api->find_first(state->tag_mgr, TM_STATIC_HASH("player_camera", 0x689cd442a211fda4ULL));
+    tm_simulate_context_api->set_camera(state->simulate_ctx, state->player_camera);
     
-    TM_INIT_TEMP_ALLOCATOR_WITH_ADAPTER(ta, a);
-    const tm_hash_u64_to_id_t collision_types = tm_physics_get_collison_type_lookup(a, h);
-    state->player_collision_type = tm_hash_get_rv(&collision_types, TM_STATIC_HASH("player", 0xafff68de8a0598dfULL));
+    TM_INIT_TEMP_ALLOCATOR(ta);
+    tm_physics_collision_t *all_collision_types = tm_physics_collision_api->find_all(state->tt, ta);
+    const uint64_t player_coll_type = TM_STATIC_HASH("player", 0xafff68de8a0598dfULL);
+    for (uint32_t coll_type = 0; coll_type < tm_carray_size(all_collision_types); ++coll_type) {
+        if (all_collision_types[coll_type].name == player_coll_type) {
+            state->player_collision_type = all_collision_types[coll_type].collision;
+            break;
+        }
+    }
     TM_SHUTDOWN_TEMP_ALLOCATOR(ta);
     
     return state;
@@ -120,7 +140,7 @@ static void open_door(tm_simulate_state_o *state, tm_simulate_frame_args_t *args
 
     const float t = (float)(args->time - state->door_start_open_time)/door_open_speed;
     const tm_vec4_t rot = tm_quaternion_mul(state->door_initial_rot, tm_quaternion_from_rotation((tm_vec3_t){ 0, 1, 0}, tm_lerp(0, state->door_end_angle, tm_min(t, 1))));
-    tm_entity_set_local_rotation(state->door, rot, &state->h);
+    tm_set_local_rotation(state->trans_mgr, state->door, rot);
 }
 
 static float lever_move_speed = 0.3f;
@@ -132,7 +152,7 @@ static void open_lever(tm_simulate_state_o *state, tm_simulate_frame_args_t *arg
 
     const float t = (float)(args->time - state->lever_start_move_time)/lever_move_speed;
     const tm_vec4_t rot = tm_quaternion_mul(state->lever_initial_rot, tm_quaternion_from_rotation((tm_vec3_t){ 1, 0, 0}, tm_lerp(0, state->lever_end_angle, tm_min(t, 1))));
-    tm_entity_set_local_rotation(state->lever, rot, &state->h);
+    tm_set_local_rotation(state->trans_mgr, state->lever, rot);
 
     if (t >= 1 && !state->door_start_open_time) {
         state->door_end_angle = -TM_PI/2;
@@ -140,7 +160,7 @@ static void open_lever(tm_simulate_state_o *state, tm_simulate_frame_args_t *arg
     }
 }
 
-static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
+static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
 {
     // Reset per-frame-input
     state->input.mouse_delta.x = state->input.mouse_delta.y = 0;
@@ -210,9 +230,8 @@ static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     open_lever(state, args);
     open_door(state, args);
 
-    tm_simulate_helpers_context_t *h = &state->h;
-    const tm_vec3_t camera_pos = tm_entity_get_position(state->player_camera, h);
-    const tm_vec4_t camera_rot = tm_entity_get_rotation(state->player_camera, h);
+    const tm_vec3_t camera_pos = tm_get_position(state->trans_mgr, state->player_camera);
+    const tm_vec4_t camera_rot = tm_get_rotation(state->trans_mgr, state->player_camera);
     struct tm_physx_mover_component_t* player_mover = tm_entity_api->get_component_by_hash(state->entity_ctx, state->player, TM_TT_TYPE_HASH__PHYSX_MOVER_COMPONENT);
 
     if (!TM_ASSERT(player_mover, tm_error_api->def, "Invalid player"))
@@ -258,7 +277,7 @@ static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
         const tm_vec4_t yawq = tm_quaternion_from_rotation((tm_vec3_t){ 0, 1, 0 }, state->look_yaw);
         const tm_vec3_t local_sideways = tm_quaternion_rotate_vec3(yawq, (tm_vec3_t){ 1, 0, 0 });
         const tm_vec4_t pitchq = tm_quaternion_from_rotation(local_sideways, state->look_pitch);
-        tm_entity_set_local_rotation(state->player_camera, tm_quaternion_mul(pitchq, yawq), h);
+        tm_set_local_rotation(state->trans_mgr, state->player_camera, tm_quaternion_mul(pitchq, yawq));
 
         // Jump
         const bool can_jump = args->time < state->last_standing_time + 0.2f;
@@ -277,19 +296,19 @@ static void update(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     if (r.has_block) {
         const tm_entity_t hit = r.block.body;
         const tm_component_mask_t *hit_mask = tm_entity_api->component_mask(state->entity_ctx, hit);
-        if (tm_entity_mask_has_component(hit_mask, state->comp_idx.interactable)) {
+        if (tm_entity_mask_has_component(hit_mask, state->interact_comp_idx)) {
             crosshair_color = (tm_color_srgb_t){ 255, 255, 255, 255 };
             if (state->input.left_mouse_pressed) {
-                tm_interactable_component_t *ic = tm_entity_api->get_component(state->entity_ctx, hit, state->comp_idx.interactable);
+                tm_interactable_component_t *ic = tm_entity_api->get_component(state->entity_ctx, hit, state->interact_comp_idx);
 
                 if (ic->type == TM_INTERACTABLE_TYPE_LEVER) {
                     state->lever_start_move_time = 0;
                     state->door_start_open_time = 0;
                     state->door = ic->lever.target; 
-                    state->door_initial_rot = tm_entity_get_local_rotation(state->door, h);
+                    state->door_initial_rot = tm_get_local_rotation(state->trans_mgr, state->door);
 
                     state->lever = ic->lever.handle;
-                    state->lever_initial_rot = tm_entity_get_local_rotation(state->lever, h);
+                    state->lever_initial_rot = tm_get_local_rotation(state->trans_mgr, state->lever);
                     state->lever_end_angle = TM_PI/5;
                     state->lever_start_move_time = args->time;
                 }
@@ -313,7 +332,7 @@ static tm_simulate_entry_i simulate_entry_i = {
     .display_name = "An Island of Doors",
     .start = start,
     .stop = stop,
-    .update = update,
+    .tick = tick,
 };
 
 extern void load_interactable_component(struct tm_api_registry_api* reg, bool load);
