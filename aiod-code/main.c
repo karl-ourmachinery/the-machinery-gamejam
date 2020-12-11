@@ -1,6 +1,6 @@
 #include "api_loader.inl"
 
-TM_LOAD_APIS(tm_load_apis,
+TM_LOAD_APIS(load_apis,
     tm_application_api,
     tm_draw2d_api,
     tm_entity_api,
@@ -339,7 +339,7 @@ extern void load_interactable_component(struct tm_api_registry_api* reg, bool lo
 
 TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
 {
-    tm_load_apis(reg);
+    load_apis(reg);
     tm_add_or_remove_implementation(reg, load, TM_SIMULATE_ENTRY_INTERFACE_NAME, &simulate_entry_i);
     load_interactable_component(reg, load);
 }

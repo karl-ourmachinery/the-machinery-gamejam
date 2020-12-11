@@ -11,34 +11,15 @@ components: [
 	{
 		__type: "tm_transform_component"
 		__uuid: "a038b320-1ac6-f30b-ce5d-4721b5c0ef1b"
-		position: {
-			__uuid: "45df1db3-3deb-72f6-25c8-4f0497fbb3ed"
+		local_position: {
+			__uuid: "55bf5586-f07b-0384-bc17-6ad4064e94fd"
 		}
-		rotation: {
-			__uuid: "8606cdc9-d15d-b49f-6dbd-1ae2119151ff"
+		local_rotation: {
+			__uuid: "402c2265-4a90-4582-1077-c182fc60d314"
 		}
-		scale: {
-			__uuid: "60b836f1-b1fc-f9e6-9e7b-81d3583b2418"
+		local_scale: {
+			__uuid: "d5edae1d-f54b-d997-de4f-7db010f05df3"
 		}
-	}
-	{
-		__type: "tm_link_component"
-		__uuid: "4a63233c-7802-00ab-070e-d87b33be58af"
-		position: {
-			__uuid: "9fcd97cc-6430-e7ee-8857-57f320cd5b7a"
-		}
-		rotation: {
-			__uuid: "e0f82082-86ff-ecd9-cfe7-082c4758eb3e"
-		}
-		scale: {
-			__uuid: "8d297559-b046-3103-8bfa-2c41a1a3d4bf"
-		}
-	}
-	{
-		__type: "tm_scene_tree_component"
-		__uuid: "2fc56558-2d23-faa6-369d-41cd3c3b09b7"
-		node: "0163335ee2b57688"
-		node_names: "af59dd186aac960e"
 	}
 	{
 		__type: "tm_physics_shape_component"
@@ -51,6 +32,12 @@ components: [
 			format: "tm_physx_mesh_cooked_data"
 			data: "78f587341f0ebaaf"
 		}
+	}
+	{
+		__type: "tm_scene_tree_component"
+		__uuid: "2fc56558-2d23-faa6-369d-41cd3c3b09b7"
+		node: "0163335ee2b57688"
+		node_names: "af59dd186aac960e"
 	}
 ]
 children: [
@@ -65,28 +52,15 @@ children: [
 					{
 						__type: "tm_transform_component"
 						__uuid: "4be797ec-f8d8-d9c2-1496-138fc70381ae"
-						position: {
-							__uuid: "fdbfc8f2-8411-3838-dcbb-1d7cae36af21"
-						}
-						rotation: {
-							__uuid: "4e6a17c3-2450-f8cf-5e0b-d0e3334f25f6"
-						}
-						scale: {
-							__uuid: "b3ca482f-274c-9a9f-03c0-85e1bfd6bc69"
-						}
-					}
-					{
-						__type: "tm_link_component"
-						__uuid: "7836e734-b289-32e3-d61f-f4c40ead0c0c"
-						position: {
-							__uuid: "b92eece9-45ab-a4dc-1848-c75166feced6"
+						local_position: {
+							__uuid: "f4220df6-377d-1938-e89e-4dc5856fd040"
 							z: 0.5
 						}
-						rotation: {
-							__uuid: "5cfe5835-6ebf-5e81-e923-2d6766262c4d"
+						local_rotation: {
+							__uuid: "d21373a4-fc25-53f6-2c05-7c623319dca9"
 						}
-						scale: {
-							__uuid: "8ef6593c-0288-213e-2a93-9dc6474e2cca"
+						local_scale: {
+							__uuid: "277b00af-cf35-0f22-7504-4fab7b498924"
 						}
 						scene_tree_node: "94ab0d68f43aa7a8"
 					}

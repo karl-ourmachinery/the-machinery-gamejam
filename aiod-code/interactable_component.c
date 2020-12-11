@@ -1,6 +1,6 @@
 #include "api_loader.inl"
 
-TM_LOAD_APIS(tm_load_apis,
+TM_LOAD_APIS(load_apis,
     tm_entity_api,
     tm_the_truth_api,
     tm_localizer_api,
@@ -164,7 +164,7 @@ static void component__create(struct tm_entity_context_o* ctx)
 
 void load_interactable_component(struct tm_api_registry_api* reg, bool load)
 {
-    tm_load_apis(reg);
+    load_apis(reg);
 
     tm_add_or_remove_implementation(reg, load, TM_THE_TRUTH_CREATE_TYPES_INTERFACE_NAME, truth__create_types);
     tm_add_or_remove_implementation(reg, load, TM_ENTITY_CREATE_COMPONENT_INTERFACE_NAME, component__create);

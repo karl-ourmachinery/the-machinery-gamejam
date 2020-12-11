@@ -11,34 +11,15 @@ components: [
 	{
 		__type: "tm_transform_component"
 		__uuid: "297e2937-d9d9-ef10-1bb5-13d10bc5ae43"
-		position: {
-			__uuid: "bb54a731-2050-f08f-b6ac-54fa6beeb77a"
+		local_position: {
+			__uuid: "d5dcf4c4-6244-7bc8-197c-873f9bc3c159"
 		}
-		rotation: {
-			__uuid: "2818ed49-85d9-8c70-9c9a-ef4e31fa9096"
+		local_rotation: {
+			__uuid: "ae25063a-57dc-084c-a842-54293cc32154"
 		}
-		scale: {
-			__uuid: "7dee0d2c-901d-81a0-ec6f-8873cb3739e3"
+		local_scale: {
+			__uuid: "63025881-69f4-cbfd-abf8-7f0137c374cc"
 		}
-	}
-	{
-		__type: "tm_link_component"
-		__uuid: "f79be26c-c9c5-ff34-1e02-949be7a036c2"
-		position: {
-			__uuid: "9d06d0ff-0edf-aa01-4cbb-bd32718917a6"
-		}
-		rotation: {
-			__uuid: "9fe85d32-cecf-e4a4-7009-610c89f7a6c9"
-		}
-		scale: {
-			__uuid: "48719ecb-3630-3035-dcda-d233fb4124c4"
-		}
-	}
-	{
-		__type: "tm_scene_tree_component"
-		__uuid: "1e02dd2d-bae1-e5e5-2dde-fb2af7d4dbf9"
-		node: "cb48bd0b05ad6e55"
-		node_names: "89f77beff1852a7a"
 	}
 	{
 		__type: "tm_physics_shape_component"
@@ -51,6 +32,12 @@ components: [
 			format: "tm_physx_mesh_cooked_data"
 			data: "fd94458134f86e72"
 		}
+	}
+	{
+		__type: "tm_scene_tree_component"
+		__uuid: "1e02dd2d-bae1-e5e5-2dde-fb2af7d4dbf9"
+		node: "cb48bd0b05ad6e55"
+		node_names: "89f77beff1852a7a"
 	}
 ]
 children: [
@@ -65,29 +52,16 @@ children: [
 					{
 						__type: "tm_transform_component"
 						__uuid: "bd269c8e-8372-48a0-40d7-70c0b93bd0e1"
-						position: {
-							__uuid: "e7dc0e30-0856-d84a-bb96-9be44f547475"
-						}
-						rotation: {
-							__uuid: "403936ea-4904-728b-6612-42661fb8f764"
-						}
-						scale: {
-							__uuid: "08f98782-721c-9b27-4e7d-8ac5541823b4"
-						}
-					}
-					{
-						__type: "tm_link_component"
-						__uuid: "d6f4be5d-b140-8fe2-a09c-1d9e5fbc80d5"
-						position: {
-							__uuid: "e96a4cc7-de9a-02ba-e495-d4b7a4f81d89"
+						local_position: {
+							__uuid: "eeddb953-d0c3-796c-d958-b868a14f9e74"
 							x: -0.5
 							z: 0.5
 						}
-						rotation: {
-							__uuid: "67be8c31-84d5-d89b-9e9f-a109ce53a4af"
+						local_rotation: {
+							__uuid: "99a95f01-d87a-be63-e3fb-bac03f9178aa"
 						}
-						scale: {
-							__uuid: "02176f78-bf7b-94d2-34af-700303085492"
+						local_scale: {
+							__uuid: "a67fc32c-8a25-db3b-b59a-8b61955877b8"
 						}
 						scene_tree_node: "94ab0d68f43aa7a8"
 					}
@@ -144,29 +118,16 @@ children: [
 					{
 						__type: "tm_transform_component"
 						__uuid: "57e91c4b-6dee-d6a4-cc2b-72d2883deb51"
-						position: {
-							__uuid: "6de108b6-01ef-add5-45a6-563b07fda3fa"
-						}
-						rotation: {
-							__uuid: "204f735b-171c-6385-9b35-0b8cd471020c"
-						}
-						scale: {
-							__uuid: "34c32f9d-1899-a1d4-0250-076295506de8"
-						}
-					}
-					{
-						__type: "tm_link_component"
-						__uuid: "385b56ac-a736-f80d-3569-7e30359e5e6b"
-						position: {
-							__uuid: "2c89bd7f-8292-8cf5-5a9e-2e47554c66ca"
+						local_position: {
+							__uuid: "24a79f36-e438-fbd9-c506-84e102efa83e"
 							x: -0.5
 							z: 0.5
 						}
-						rotation: {
-							__uuid: "dd22c73c-992f-6a90-8498-e77b6c07ae16"
+						local_rotation: {
+							__uuid: "3599aa98-453f-144d-7e73-b319cdd39a85"
 						}
-						scale: {
-							__uuid: "f5d2da42-d59d-92c8-6c1c-dd6a2429c779"
+						local_scale: {
+							__uuid: "6923f94b-d151-4f69-8178-65afb03544bc"
 						}
 						scene_tree_node: "94ab0d68f43aa7a8"
 					}
@@ -223,29 +184,16 @@ children: [
 					{
 						__type: "tm_transform_component"
 						__uuid: "689de213-3aa4-462b-64dc-541f57d2e7e3"
-						position: {
-							__uuid: "89dcdebb-b813-beaf-1224-f7df3693782c"
-						}
-						rotation: {
-							__uuid: "e1adf9d7-b73e-4e55-21b6-a3a81f31ab89"
-						}
-						scale: {
-							__uuid: "912fc10c-7221-1a22-e0af-5dab715cdc2c"
-						}
-					}
-					{
-						__type: "tm_link_component"
-						__uuid: "6d906753-ffc7-3795-270a-8d3a6ea5ed06"
-						position: {
-							__uuid: "ce7af749-db71-5271-af01-6bc21245d86c"
+						local_position: {
+							__uuid: "82d65a42-2afb-20b0-2ee9-73000b314756"
 							x: -0.5
 							z: 0.5
 						}
-						rotation: {
-							__uuid: "36308eaa-1429-950e-f425-9669917e7d80"
+						local_rotation: {
+							__uuid: "45209215-aba4-caac-f2f4-458354826140"
 						}
-						scale: {
-							__uuid: "d2aa6fa3-ea8e-afaf-6a14-8e8bcdc55871"
+						local_scale: {
+							__uuid: "5da49304-09e4-708f-ebf6-c592d7266e31"
 						}
 						scene_tree_node: "8086fdf4f2064955"
 					}

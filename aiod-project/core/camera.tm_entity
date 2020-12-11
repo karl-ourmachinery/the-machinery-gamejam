@@ -9,27 +9,14 @@ components: [
 	{
 		__type: "tm_transform_component"
 		__uuid: "1e1f4b6c-69cb-4500-bdd6-af175c8725be"
-		position: {
-			__uuid: "5a027607-5334-2d54-45a0-8b259a08ae60"
+		local_position: {
+			__uuid: "6548b335-84e6-9d70-7150-87d469b88c8e"
 		}
-		rotation: {
-			__uuid: "c00f5f2f-9d3f-1f4c-507d-5614d79dbc43"
+		local_rotation: {
+			__uuid: "1058731b-31cf-e070-9043-448e4245a346"
 		}
-		scale: {
-			__uuid: "d1bba6e1-6664-9029-e8c8-c448d708df68"
-		}
-	}
-	{
-		__type: "tm_link_component"
-		__uuid: "354c16c2-e255-e95b-1706-41a455cf7c71"
-		position: {
-			__uuid: "93d4f012-d08e-645d-bc3e-1944c0201194"
-		}
-		rotation: {
-			__uuid: "b5481686-6fdc-9953-bb90-93774e19adcf"
-		}
-		scale: {
-			__uuid: "e3ff3598-fc2f-2659-7216-822227dd5f31"
+		local_scale: {
+			__uuid: "92bc1a46-683a-8ab2-f83d-16cda1b023ab"
 		}
 	}
 ]

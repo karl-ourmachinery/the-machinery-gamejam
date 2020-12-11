@@ -5687,27 +5687,31 @@
 		name: "tm_transform_component"
 		properties: [
 			{
-				name: "position"
+				name: "local_position"
 				type: "subobject"
 				type_hash: "7a29b8f6b1ca42ec"
 			}
 			{
-				name: "rotation"
+				name: "local_rotation"
 				type: "subobject"
 				type_hash: "a4d2f46b41c9d717"
 			}
 			{
-				name: "scale"
+				name: "local_scale"
 				type: "subobject"
 				type_hash: "20ef513a9606cc30"
 			}
+			{
+				name: "scene_tree_node"
+				type: "uint64_t"
+			}
 		]
 		default: {
-			position: {
+			local_position: {
 			}
-			rotation: {
+			local_rotation: {
 			}
-			scale: {
+			local_scale: {
 			}
 		}
 	}
