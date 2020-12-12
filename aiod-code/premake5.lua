@@ -8,7 +8,7 @@ newoption {
     description = "Force use of CLANG for Windows builds"
 }
 
-workspace "minimal"
+workspace "aiod"
     configurations {"Debug", "Release"}
     language "C++"
     cppdialect "C++11"
@@ -69,9 +69,9 @@ filter "configurations:Release"
     defines { "TM_CONFIGURATION_RELEASE" }
     optimize "On"
 
-project "minimal"
-    location "build/minimal"
-    targetname "tm_minimal"
+project "aiod"
+    location "build/aiod"
+    targetname "tm_aiod"
     kind "SharedLib"
     language "C++"
     files {"*.inl", "*.h", "*.c"}

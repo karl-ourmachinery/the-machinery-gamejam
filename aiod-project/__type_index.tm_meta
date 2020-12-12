@@ -3582,6 +3582,53 @@
 		]
 	}
 	{
+		name: "tm_interactable_button"
+		properties: [
+			{
+				name: "button"
+				type: "reference"
+				type_hash: "ff156da2e01c4a3d"
+			}
+			{
+				name: "button_push_axis"
+				type: "subobject"
+				type_hash: "8d1487af36b1e3e1"
+			}
+			{
+				name: "button_push_distance"
+				type: "float"
+			}
+			{
+				name: "button_push_time"
+				type: "float"
+			}
+			{
+				name: "target"
+				type: "reference"
+				type_hash: "ff156da2e01c4a3d"
+			}
+			{
+				name: "target_rotate_axis"
+				type: "subobject"
+				type_hash: "8d1487af36b1e3e1"
+			}
+			{
+				name: "target_rotate_angle"
+				type: "float"
+			}
+			{
+				name: "target_open_time"
+				type: "float"
+			}
+		]
+		default: {
+			button_push_axis: {
+			}
+			target_rotate_axis: {
+			}
+		}
+	}
+	{
 		name: "tm_interactable_component"
 		properties: [
 			{

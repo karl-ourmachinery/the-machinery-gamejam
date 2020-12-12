@@ -28,6 +28,101 @@ TM_LOAD_APIS(load_apis,
 #include <foundation/rect.inl>
 #include <foundation/math.inl>
 
+// ---
+
+enum interactable_component_prop {
+    INTERACTABLE_COMPONENT_PROP__DESC, // subobject(TM_TT_TYPE__INTERACTABLE_XXX) -- for example TT_TYPE__INTERACTABLE_LEVER
+};
+
+#define TT_TYPE__INTERACTABLE_LEVER "tm_interactable_lever"
+#define TT_TYPE_HASH__INTERACTABLE_LEVER TM_STATIC_HASH("tm_interactable_lever", 0xb415dd3c3c35fb79ULL)
+
+enum interactable_lever_prop {
+    INTERACTABLE_LEVER_PROP__HANDLE, // reference(entity)
+    INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_AXIS, // vec3
+    INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_ANGLE, // float
+    INTERACTABLE_LEVER_PROP__HANDLE_OPEN_TIME, // float
+    INTERACTABLE_LEVER_PROP__TARGET, // reference(entity)
+    INTERACTABLE_LEVER_PROP__TARGET_ROTATE_AXIS, // vec3
+    INTERACTABLE_LEVER_PROP__TARGET_ROTATE_ANGLE, // float
+    INTERACTABLE_LEVER_PROP__TARGET_OPEN_TIME, // float
+};
+
+#define TT_TYPE__INTERACTABLE_BUTTON "tm_interactable_button"
+#define TT_TYPE_HASH__INTERACTABLE_BUTTON TM_STATIC_HASH("tm_interactable_button", 0xb6c62757302df535ULL)
+
+enum interactable_button_prop {
+    INTERACTABLE_BUTTON_PROP__BUTTON, // reference(entity)
+    INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_AXIS, // vec3
+    INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_DISTANCE, // float
+    INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_TIME, // float
+    INTERACTABLE_BUTTON_PROP__TARGET, // reference(entity)
+    INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_AXIS, // vec3
+    INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_ANGLE, // float
+    INTERACTABLE_BUTTON_PROP__TARGET_OPEN_TIME, // float
+};
+
+enum interactable_type {
+    INTERACTABLE_TYPE_LEVER,
+    INTERACTABLE_TYPE_BUTTON,
+};
+
+enum lever_state {
+    LEVER_STATE_CLOSED,
+    LEVER_STATE_LEVER_OPENING,
+    LEVER_STATE_TARGET_OPENING,
+    LEVER_STATE_OPEN,
+    LEVER_STATE_LEVER_CLOSING,
+    LEVER_STATE_TARGET_CLOSING,
+};
+
+typedef struct lever_t {
+    tm_entity_t handle;
+    tm_entity_t target;
+    tm_vec4_t handle_closed_rotation;
+    tm_vec4_t handle_open_rotation;
+    tm_vec4_t target_closed_rotation;
+    tm_vec4_t target_open_rotation;
+    float handle_open_time;
+    float target_open_time;
+    enum lever_state state;
+    TM_PAD(4);
+} lever_t;
+
+
+enum button_state {
+    BUTTON_STATE_NORMAL,
+    BUTTON_STATE_BUTTON_PUSHING,
+    BUTTON_STATE_TARGET_OPENING,
+    BUTTON_STATE_PUSHED,
+    BUTTON_STATE_BUTTON_UNPUSHING,
+    BUTTON_STATE_TARGET_CLOSING,
+};
+
+typedef struct button_t {
+    tm_entity_t button;
+    tm_entity_t target;
+    tm_vec3_t button_normal_position;
+    tm_vec3_t button_pushed_position;
+    tm_vec4_t target_closed_rotation;
+    tm_vec4_t target_open_rotation;
+    float button_push_time;
+    float target_open_time;
+    enum button_state state;
+    TM_PAD(4);
+} button_t;
+
+typedef struct interactable_component_t {
+    enum interactable_type type;
+    TM_PAD(4);
+    union {
+        lever_t lever;
+        button_t button;
+    };
+} interactable_component_t;
+
+// ---
+
 static const char *component_category(void)
 {
     return TM_LOCALIZE("Interactables");
@@ -37,23 +132,9 @@ static tm_ci_editor_ui_i *editor_aspect = &(tm_ci_editor_ui_i){
     .category = component_category
 };
 
-enum lever_state {
-    LEVER_STATE_LEVER_MOVING,
-    LEVER_STATE_TARGET_MOVING,
-};
-
-typedef struct {
-    enum lever_state state;
-} active_lever_t;
-
 typedef struct {
     double start_time;
     tm_entity_t interactable;
-
-    union {
-        active_lever_t lever;
-    };
-    TM_PAD(4);
 } active_interaction_t;
 
 struct tm_interactable_component_manager_o {
@@ -65,59 +146,121 @@ struct tm_interactable_component_manager_o {
     tm_transform_component_manager_o *trans_mgr;
 };
 
-static bool update_lever(tm_interactable_component_manager_o *mgr, float dt, double t, active_interaction_t *a, tm_interactable_component_t *c)
+static bool update_lever(tm_interactable_component_manager_o *mgr, float dt, double t, active_interaction_t *a, interactable_component_t *c)
 {
     bool res = false;
-    switch (c->lever.state) {
-        case TM_LEVER_STATE_CLOSED: {
-            c->lever.state = TM_LEVER_STATE_LEVER_OPENING;
+    lever_t *l = &c->lever;
+    switch (l->state) {
+        case LEVER_STATE_CLOSED: {
+            l->state = LEVER_STATE_LEVER_OPENING;
         } break;
 
-        case TM_LEVER_STATE_LEVER_OPENING: {
-            const float p = (float)(t - a->start_time)/c->lever.handle_open_time;
-            const tm_vec4_t rot = tm_quaternion_nlerp(c->lever.handle_closed_rotation, c->lever.handle_open_rotation, tm_min(p, 1));
-            tm_set_local_rotation(mgr->trans_mgr, c->lever.handle, rot);
+        case LEVER_STATE_LEVER_OPENING: {
+            const float p = (float)(t - a->start_time)/l->handle_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(l->handle_closed_rotation, l->handle_open_rotation, tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, l->handle, rot);
 
             if (p >= 1) {
                 a->start_time = t;
-                c->lever.state = TM_LEVER_STATE_TARGET_OPENING;
+                l->state = LEVER_STATE_TARGET_OPENING;
             }
         } break;
 
-        case TM_LEVER_STATE_TARGET_OPENING: {
-            const float p = (float)(t - a->start_time)/c->lever.target_open_time;
-            const tm_vec4_t rot = tm_quaternion_nlerp(c->lever.target_closed_rotation, c->lever.target_open_rotation,tm_min(p, 1));
-            tm_set_local_rotation(mgr->trans_mgr, c->lever.target, rot);
+        case LEVER_STATE_TARGET_OPENING: {
+            const float p = (float)(t - a->start_time)/l->target_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(l->target_closed_rotation, l->target_open_rotation,tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, l->target, rot);
 
             if (p >= 1) {
                 res = true;
-                c->lever.state = TM_LEVER_STATE_OPEN;
+                l->state = LEVER_STATE_OPEN;
             }
         } break;
 
-        case TM_LEVER_STATE_OPEN: {
-            c->lever.state = TM_LEVER_STATE_LEVER_CLOSING;
+        case LEVER_STATE_OPEN: {
+            l->state = LEVER_STATE_LEVER_CLOSING;
         } break;
 
-        case TM_LEVER_STATE_LEVER_CLOSING: {
-            const float p = (float)(t - a->start_time)/c->lever.handle_open_time;
-            const tm_vec4_t rot = tm_quaternion_nlerp(c->lever.handle_open_rotation, c->lever.handle_closed_rotation, tm_min(p, 1));
-            tm_set_local_rotation(mgr->trans_mgr, c->lever.handle, rot);
+        case LEVER_STATE_LEVER_CLOSING: {
+            const float p = (float)(t - a->start_time)/l->handle_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(l->handle_open_rotation, l->handle_closed_rotation, tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, l->handle, rot);
 
             if (p >= 1) {
                 a->start_time = t;
-                c->lever.state = TM_LEVER_STATE_TARGET_CLOSING;
+                l->state = LEVER_STATE_TARGET_CLOSING;
             }
         } break;
 
-        case TM_LEVER_STATE_TARGET_CLOSING: {
-            const float p = (float)(t - a->start_time)/c->lever.target_open_time;
-            const tm_vec4_t rot = tm_quaternion_nlerp(c->lever.target_open_rotation, c->lever.target_closed_rotation, tm_min(p, 1));
-            tm_set_local_rotation(mgr->trans_mgr, c->lever.target, rot);
+        case LEVER_STATE_TARGET_CLOSING: {
+            const float p = (float)(t - a->start_time)/l->target_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(l->target_open_rotation, l->target_closed_rotation, tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, l->target, rot);
 
             if (p >= 1) {
                 res = true;
-                c->lever.state = TM_LEVER_STATE_CLOSED;
+                l->state = LEVER_STATE_CLOSED;
+            }
+        } break;
+    }
+
+    return res;
+}
+
+static bool update_button(tm_interactable_component_manager_o *mgr, float dt, double t, active_interaction_t *a, interactable_component_t *c)
+{
+    bool res = false;
+    button_t *b = &c->button;
+    switch (b->state) {
+        case BUTTON_STATE_NORMAL: {
+            b->state = BUTTON_STATE_BUTTON_PUSHING;
+        } break;
+
+        case BUTTON_STATE_BUTTON_PUSHING: {
+            const float p = (float)(t - a->start_time)/b->button_push_time;
+            const tm_vec3_t pos = tm_vec3_lerp(b->button_normal_position, b->button_pushed_position, tm_min(p, 1));
+            tm_set_local_position(mgr->trans_mgr, b->button, pos);
+
+            if (p >= 1) {
+                a->start_time = t;
+                b->state = BUTTON_STATE_TARGET_OPENING;
+            }
+        } break;
+
+        case BUTTON_STATE_TARGET_OPENING: {
+            const float p = (float)(t - a->start_time)/b->target_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(b->target_closed_rotation, b->target_open_rotation,tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, b->target, rot);
+
+            if (p >= 1) {
+                res = true;
+                b->state = BUTTON_STATE_PUSHED;
+            }
+        } break;
+
+        case BUTTON_STATE_PUSHED: {
+            b->state = BUTTON_STATE_BUTTON_UNPUSHING;
+        } break;
+
+        case BUTTON_STATE_BUTTON_UNPUSHING: {
+            const float p = (float)(t - a->start_time)/b->button_push_time;
+            const tm_vec3_t pos = tm_vec3_lerp(b->button_pushed_position, b->button_normal_position, tm_min(p, 1));
+            tm_set_local_position(mgr->trans_mgr, b->button, pos);
+
+            if (p >= 1) {
+                a->start_time = t;
+                b->state = BUTTON_STATE_TARGET_CLOSING;
+            }
+        } break;
+
+        case BUTTON_STATE_TARGET_CLOSING: {
+            const float p = (float)(t - a->start_time)/b->target_open_time;
+            const tm_vec4_t rot = tm_quaternion_nlerp(b->target_open_rotation, b->target_closed_rotation, tm_min(p, 1));
+            tm_set_local_rotation(mgr->trans_mgr, b->target, rot);
+
+            if (p >= 1) {
+                res = true;
+                b->state = BUTTON_STATE_NORMAL;
             }
         } break;
     }
@@ -129,15 +272,18 @@ static void update_active_interactables(tm_interactable_component_manager_o *mgr
 {
     for (int32_t active_idx = 0; active_idx < (int32_t)tm_carray_size(mgr->active); ++active_idx) {
         active_interaction_t *a = mgr->active + active_idx;
-        tm_interactable_component_t *c = tm_entity_api->get_component(mgr->ctx, a->interactable, mgr->interactable_component_type);
+        interactable_component_t *c = tm_entity_api->get_component(mgr->ctx, a->interactable, mgr->interactable_component_type);
 
         if (!a->start_time)
             a->start_time = t;
 
         bool res = false;
         switch(c->type) {
-            case TM_INTERACTABLE_TYPE_LEVER: {
+            case INTERACTABLE_TYPE_LEVER: {
                 res = update_lever(mgr, dt, t, a, c);
+            } break;
+            case INTERACTABLE_TYPE_BUTTON: {
+                res = update_button(mgr, dt, t, a, c);
             } break;
         }
 
@@ -183,18 +329,20 @@ static struct tm_interactable_component_api *tm_interactable_component_api = &(s
 static float component_properties_ui(struct tm_properties_ui_args_t *args, tm_rect_t item_rect, tm_tt_id_t component_id, uint32_t indent)
 {
     tm_the_truth_o *tt = args->tt;
-    tm_tt_id_t desc = tm_the_truth_api->get_subobject(tt, tm_tt_read(tt, component_id), TM_TT_PROP__INTERACTABLE_COMPONENT__DESC);
+    tm_tt_id_t desc = tm_the_truth_api->get_subobject(tt, tm_tt_read(tt, component_id), INTERACTABLE_COMPONENT_PROP__DESC);
     const uint64_t desc_type = desc.index ? desc.type : 0;
     const uint64_t desc_type_hash = desc_type ? tm_the_truth_api->type_name_hash(tt, desc_type) : 0;
 
     const uint64_t type_hashes[] = {
         0,
-        TM_TT_TYPE_HASH__INTERACTABLE_LEVER,
+        TT_TYPE_HASH__INTERACTABLE_LEVER,
+        TT_TYPE_HASH__INTERACTABLE_BUTTON,
     };
 
     const char *type_names[] = {
         TM_LOCALIZE("None"),
         TM_LOCALIZE("Lever"),
+        TM_LOCALIZE("Button"),
     };
 
     const tm_rect_t label_r = tm_rect_split_left(item_rect, args->metrics[TM_PROPERTIES_METRIC_LABEL_WIDTH], args->metrics[TM_PROPERTIES_METRIC_MARGIN], 0);
@@ -225,7 +373,7 @@ static float component_properties_ui(struct tm_properties_ui_args_t *args, tm_re
             if (tm_the_truth_api->is_alive(tt, desc))
                 tm_the_truth_api->destroy_object(tt, desc, undo_scope);
         
-            tm_the_truth_api->set_subobject(tt, component_w, TM_TT_PROP__INTERACTABLE_COMPONENT__DESC, 0);
+            tm_the_truth_api->set_subobject(tt, component_w, INTERACTABLE_COMPONENT_PROP__DESC, 0);
         }
 
         const uint64_t new_hash = type_hashes[selected_idx];
@@ -235,7 +383,7 @@ static float component_properties_ui(struct tm_properties_ui_args_t *args, tm_re
 
             if (new_type) {
                 desc = tm_the_truth_api->create_object_of_type(tt, new_type, undo_scope);
-                tm_the_truth_api->set_subobject_id(tt, component_w, TM_TT_PROP__INTERACTABLE_COMPONENT__DESC, desc, undo_scope);
+                tm_the_truth_api->set_subobject_id(tt, component_w, INTERACTABLE_COMPONENT_PROP__DESC, desc, undo_scope);
             }
         }
 
@@ -255,7 +403,7 @@ tm_properties_aspect_i *properties_aspect = &(tm_properties_aspect_i){
 static void truth__create_types(struct tm_the_truth_o* tt)
 {
     tm_the_truth_property_definition_t interactable_component_properties[] = {
-        [TM_TT_PROP__INTERACTABLE_COMPONENT__DESC] = { "desc", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__ANYTHING },
+        [INTERACTABLE_COMPONENT_PROP__DESC] = { "desc", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__ANYTHING },
     };
 
     const uint64_t interactable_component_type = tm_the_truth_api->create_object_type(tt, TM_TT_TYPE__INTERACTABLE_COMPONENT, interactable_component_properties, TM_ARRAY_COUNT(interactable_component_properties));
@@ -263,63 +411,109 @@ static void truth__create_types(struct tm_the_truth_o* tt)
     tm_the_truth_api->set_aspect(tt, interactable_component_type, TM_CI_EDITOR_UI, editor_aspect);
     tm_the_truth_api->set_aspect(tt, interactable_component_type, TM_TT_ASPECT__PROPERTIES, properties_aspect);
 
-    tm_the_truth_property_definition_t lever_properties[] = {
-        [TM_TT_PROP__INTERACTABLE_LEVER__HANDLE] = { "handle", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
-        [TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_ROTATE_AXIS] = { "handle_rotate_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
-        [TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_ROTATE_ANGLE] = { "handle_rotate_angle", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
-        [TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_OPEN_TIME] = { "handle_open_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
-        [TM_TT_PROP__INTERACTABLE_LEVER__TARGET] = { "target", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
-        [TM_TT_PROP__INTERACTABLE_LEVER__TARGET_ROTATE_AXIS] = { "target_rotate_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
-        [TM_TT_PROP__INTERACTABLE_LEVER__TARGET_ROTATE_ANGLE] = { "target_rotate_angle", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
-        [TM_TT_PROP__INTERACTABLE_LEVER__TARGET_OPEN_TIME] = { "target_open_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
-    };
+    {
+        tm_the_truth_property_definition_t lever_properties[] = {
+            [INTERACTABLE_LEVER_PROP__HANDLE] = { "handle", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
+            [INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_AXIS] = { "handle_rotate_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
+            [INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_ANGLE] = { "handle_rotate_angle", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_LEVER_PROP__HANDLE_OPEN_TIME] = { "handle_open_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_LEVER_PROP__TARGET] = { "target", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
+            [INTERACTABLE_LEVER_PROP__TARGET_ROTATE_AXIS] = { "target_rotate_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
+            [INTERACTABLE_LEVER_PROP__TARGET_ROTATE_ANGLE] = { "target_rotate_angle", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_LEVER_PROP__TARGET_OPEN_TIME] = { "target_open_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+        };
 
-    const uint64_t interactable_lever_type = tm_the_truth_api->create_object_type(tt, TM_TT_TYPE__INTERACTABLE_LEVER, lever_properties, TM_ARRAY_COUNT(lever_properties));
-    tm_the_truth_api->set_property_aspect(tt, interactable_lever_type, TM_TT_PROP__INTERACTABLE_LEVER__HANDLE, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
-    tm_the_truth_api->set_property_aspect(tt, interactable_lever_type, TM_TT_PROP__INTERACTABLE_LEVER__TARGET, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
-    tm_the_truth_api->set_default_object_to_create_subobjects(tt, interactable_lever_type);
+        const uint64_t interactable_lever_type = tm_the_truth_api->create_object_type(tt, TT_TYPE__INTERACTABLE_LEVER, lever_properties, TM_ARRAY_COUNT(lever_properties));
+        tm_the_truth_api->set_property_aspect(tt, interactable_lever_type, INTERACTABLE_LEVER_PROP__HANDLE, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
+        tm_the_truth_api->set_property_aspect(tt, interactable_lever_type, INTERACTABLE_LEVER_PROP__TARGET, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
+        tm_the_truth_api->set_default_object_to_create_subobjects(tt, interactable_lever_type);
+    }
+
+    {
+        tm_the_truth_property_definition_t button_properties[] = {
+            [INTERACTABLE_BUTTON_PROP__BUTTON] = { "button", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
+            [INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_AXIS] = { "button_push_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
+            [INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_DISTANCE] = { "button_push_distance", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_TIME] = { "button_push_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_BUTTON_PROP__TARGET] = { "target", TM_THE_TRUTH_PROPERTY_TYPE_REFERENCE, .type_hash = TM_TT_TYPE_HASH__ENTITY },
+            [INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_AXIS] = { "target_rotate_axis", TM_THE_TRUTH_PROPERTY_TYPE_SUBOBJECT, .type_hash = TM_TT_TYPE_HASH__VEC3, },
+            [INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_ANGLE] = { "target_rotate_angle", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+            [INTERACTABLE_BUTTON_PROP__TARGET_OPEN_TIME] = { "target_open_time", TM_THE_TRUTH_PROPERTY_TYPE_FLOAT },
+        };
+
+        const uint64_t interactable_button_type = tm_the_truth_api->create_object_type(tt, TT_TYPE__INTERACTABLE_BUTTON, button_properties, TM_ARRAY_COUNT(button_properties));
+        tm_the_truth_api->set_property_aspect(tt, interactable_button_type, INTERACTABLE_BUTTON_PROP__BUTTON, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
+        tm_the_truth_api->set_property_aspect(tt, interactable_button_type, INTERACTABLE_BUTTON_PROP__TARGET, TM_TT_PROP_ASPECT__PROPERTIES__USE_LOCAL_ENTITY_PICKER, (void *)1);
+        tm_the_truth_api->set_default_object_to_create_subobjects(tt, interactable_button_type);
+    }
 }
 
 static void component__asset_loaded(tm_component_manager_o *mgr_in, tm_entity_t e, void *data)
 {
     tm_interactable_component_manager_o *mgr = (tm_interactable_component_manager_o*)mgr_in;
-    tm_interactable_component_t* c = data;
+    interactable_component_t* c = data;
     tm_entity_context_o *ctx = mgr->ctx;
     const tm_tt_id_t entity_asset = tm_entity_api->asset(mgr->ctx, e);
     tm_the_truth_o *tt = tm_entity_api->the_truth(mgr->ctx);
     const uint64_t interactable_tt_type = tm_the_truth_api->object_type_from_name_hash(tt, TM_TT_TYPE_HASH__INTERACTABLE_COMPONENT);
     const tm_tt_id_t asset = tm_the_truth_api->find_subobject_of_type(tt, tm_tt_read(tt, entity_asset), TM_TT_PROP__ENTITY__COMPONENTS, interactable_tt_type);
     const tm_the_truth_object_o* asset_r = tm_tt_read(tt, asset);
-    const tm_tt_id_t desc = tm_the_truth_api->get_subobject(tt, asset_r, TM_TT_PROP__INTERACTABLE_COMPONENT__DESC);
+    const tm_tt_id_t desc = tm_the_truth_api->get_subobject(tt, asset_r, INTERACTABLE_COMPONENT_PROP__DESC);
     const uint64_t desc_type = desc.type;
     const uint64_t desc_type_hash = tm_the_truth_api->type_name_hash(tt, desc_type);
     const tm_the_truth_object_o *desc_r = tm_tt_read(tt, desc);
 
     switch (desc_type_hash) {
-        case TM_TT_TYPE_HASH__INTERACTABLE_LEVER: {
-            c->type = TM_INTERACTABLE_TYPE_LEVER;
-            tm_interactable_lever_t *l = &c->lever;
-            const tm_tt_id_t handle = tm_the_truth_api->get_reference(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__HANDLE);
-            const float handle_rotation_angle = tm_the_truth_api->get_float(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_ROTATE_ANGLE) * (TM_PI/180.f);
-            const tm_vec3_t handle_rotation_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_ROTATE_AXIS));
+        case TT_TYPE_HASH__INTERACTABLE_LEVER: {
+            c->type = INTERACTABLE_TYPE_LEVER;
+            lever_t *l = &c->lever;
+            const tm_tt_id_t handle = tm_the_truth_api->get_reference(tt, desc_r, INTERACTABLE_LEVER_PROP__HANDLE);
+            const float handle_rotation_angle = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_ANGLE) * (TM_PI/180.f);
+            const tm_vec3_t handle_rotation_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, INTERACTABLE_LEVER_PROP__HANDLE_ROTATE_AXIS));
             if (handle.index) {
                 l->handle = tm_entity_api->resolve_asset_reference(ctx, e, handle);
                 l->handle_closed_rotation = tm_get_local_rotation(mgr->trans_mgr, l->handle);
-                l->handle_open_rotation = tm_quaternion_mul(c->lever.handle_closed_rotation, tm_quaternion_from_rotation(handle_rotation_axis, handle_rotation_angle));
-                l->handle_open_time = tm_the_truth_api->get_float(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__HANDLE_OPEN_TIME);
+                l->handle_open_rotation = tm_quaternion_mul(l->handle_closed_rotation, tm_quaternion_from_rotation(handle_rotation_axis, handle_rotation_angle));
+                l->handle_open_time = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_LEVER_PROP__HANDLE_OPEN_TIME);
                 if (l->handle_open_time < 0.001)
                     l->handle_open_time = 1.0f;
             }
-            const tm_tt_id_t target = tm_the_truth_api->get_reference(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__TARGET);
-            const float target_rotation_angle = tm_the_truth_api->get_float(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__TARGET_ROTATE_ANGLE) * (TM_PI/180.f); 
-            const tm_vec3_t taret_rotation_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__TARGET_ROTATE_AXIS));
+            const tm_tt_id_t target = tm_the_truth_api->get_reference(tt, desc_r, INTERACTABLE_LEVER_PROP__TARGET);
+            const float target_rotation_angle = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_LEVER_PROP__TARGET_ROTATE_ANGLE) * (TM_PI/180.f); 
+            const tm_vec3_t taret_rotation_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, INTERACTABLE_LEVER_PROP__TARGET_ROTATE_AXIS));
             if (target.index) {
                 l->target = tm_entity_api->resolve_asset_reference(ctx, e, target);
                 l->target_closed_rotation = tm_get_local_rotation(mgr->trans_mgr, l->target);
-                l->target_open_rotation = tm_quaternion_mul(c->lever.target_closed_rotation, tm_quaternion_from_rotation(taret_rotation_axis, target_rotation_angle));
-                l->target_open_time = tm_the_truth_api->get_float(tt, desc_r, TM_TT_PROP__INTERACTABLE_LEVER__TARGET_OPEN_TIME);
+                l->target_open_rotation = tm_quaternion_mul(l->target_closed_rotation, tm_quaternion_from_rotation(taret_rotation_axis, target_rotation_angle));
+                l->target_open_time = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_LEVER_PROP__TARGET_OPEN_TIME);
                 if (l->target_open_time < 0.001)
                     l->target_open_time = 1.0f;
+            }
+        } break;
+        case TT_TYPE_HASH__INTERACTABLE_BUTTON: {
+            c->type = INTERACTABLE_TYPE_BUTTON;
+            button_t *b = &c->button;
+            const tm_tt_id_t button = tm_the_truth_api->get_reference(tt, desc_r, INTERACTABLE_BUTTON_PROP__BUTTON);
+            const float button_push_distance = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_DISTANCE);
+            const tm_vec3_t button_push_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_AXIS));
+            if (button.index) {
+                b->button = tm_entity_api->resolve_asset_reference(ctx, e, button);
+                b->button_normal_position = tm_get_local_position(mgr->trans_mgr, b->button);
+                b->button_pushed_position = tm_vec3_add(b->button_normal_position, tm_vec3_mul(button_push_axis, button_push_distance));
+                b->button_push_time = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_BUTTON_PROP__BUTTON_PUSH_TIME);
+                if (b->button_push_time < 0.001)
+                    b->button_push_time = 1.0f;
+            }
+            const tm_tt_id_t target = tm_the_truth_api->get_reference(tt, desc_r, INTERACTABLE_BUTTON_PROP__TARGET);
+            const float target_rotation_angle = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_ANGLE) * (TM_PI/180.f); 
+            const tm_vec3_t taret_rotation_axis = tm_vec3_normalize(tm_the_truth_common_types_api->get_vec3(tt, desc_r, INTERACTABLE_BUTTON_PROP__TARGET_ROTATE_AXIS));
+            if (target.index) {
+                b->target = tm_entity_api->resolve_asset_reference(ctx, e, target);
+                b->target_closed_rotation = tm_get_local_rotation(mgr->trans_mgr, b->target);
+                b->target_open_rotation = tm_quaternion_mul(c->lever.target_closed_rotation, tm_quaternion_from_rotation(taret_rotation_axis, target_rotation_angle));
+                b->target_open_time = tm_the_truth_api->get_float(tt, desc_r, INTERACTABLE_BUTTON_PROP__TARGET_OPEN_TIME);
+                if (b->target_open_time < 0.001)
+                    b->target_open_time = 1.0f;
             }
         } break;
     }
@@ -349,7 +543,7 @@ static tm_interactable_component_manager_o *component__create(struct tm_entity_c
 
     tm_component_i component = {
         .name = TM_TT_TYPE__INTERACTABLE_COMPONENT,
-        .bytes = sizeof(struct tm_interactable_component_t),
+        .bytes = sizeof(struct interactable_component_t),
         .asset_loaded = component__asset_loaded,
         .destroy = component__destroy,
         .manager = (tm_component_manager_o*)m,
