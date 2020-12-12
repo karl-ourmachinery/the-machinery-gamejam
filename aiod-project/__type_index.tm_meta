@@ -875,6 +875,19 @@
 		]
 	}
 	{
+		name: "tm_asset_label"
+		properties: [
+			{
+				name: "uuid"
+				type: "uint64_t"
+			}
+			{
+				name: "name"
+				type: "string"
+			}
+		]
+	}
+	{
 		name: "tm_asset_root"
 		properties: [
 			{
@@ -2026,6 +2039,11 @@
 				type_hash: "c5f12f23d4534d76"
 			}
 			{
+				name: "entity_directory"
+				type: "reference"
+				type_hash: "9723e0133dc6620a"
+			}
+			{
 				name: "dcc_asset_image_directory"
 				type: "reference"
 				type_hash: "9723e0133dc6620a"
@@ -2034,6 +2052,10 @@
 				name: "dcc_asset_material_directory"
 				type: "reference"
 				type_hash: "9723e0133dc6620a"
+			}
+			{
+				name: "create_prototype_on_drop"
+				type: "bool"
 			}
 			{
 				name: "import_image_cg"
@@ -3580,12 +3602,42 @@
 				type_hash: "ff156da2e01c4a3d"
 			}
 			{
+				name: "handle_rotate_axis"
+				type: "subobject"
+				type_hash: "8d1487af36b1e3e1"
+			}
+			{
+				name: "handle_rotate_angle"
+				type: "float"
+			}
+			{
+				name: "handle_open_time"
+				type: "float"
+			}
+			{
 				name: "target"
 				type: "reference"
 				type_hash: "ff156da2e01c4a3d"
 			}
+			{
+				name: "target_rotate_axis"
+				type: "subobject"
+				type_hash: "8d1487af36b1e3e1"
+			}
+			{
+				name: "target_rotate_angle"
+				type: "float"
+			}
+			{
+				name: "target_open_time"
+				type: "float"
+			}
 		]
 		default: {
+			handle_rotate_axis: {
+			}
+			target_rotate_axis: {
+			}
 		}
 	}
 	{
@@ -4117,6 +4169,15 @@
 			{
 				name: "joint_limits"
 				type: "bool"
+			}
+		]
+	}
+	{
+		name: "tm_plugin"
+		properties: [
+			{
+				name: "windows_dll"
+				type: "buffer"
 			}
 		]
 	}

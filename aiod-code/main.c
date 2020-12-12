@@ -13,7 +13,8 @@ TM_LOAD_APIS(load_apis,
     tm_temp_allocator_api,
     tm_temp_allocator_api,
     tm_transform_component_api,
-    tm_ui_api
+    tm_ui_api,
+    tm_interactable_component_api
 );
 
 #include "interactable_component.h"
@@ -81,6 +82,7 @@ struct tm_simulate_state_o {
 
     tm_transform_component_manager_o *trans_mgr;
     tm_tag_component_manager_o *tag_mgr;
+    tm_interactable_component_manager_o *interactable_mgr;
 
     uint32_t transform_comp_idx;
     uint32_t tag_comp_idx;
@@ -105,6 +107,8 @@ static tm_simulate_state_o *start(tm_simulate_start_args_t *args)
 
     state->tag_mgr = (tm_tag_component_manager_o*)tm_entity_api->component_manager(state->entity_ctx, state->tag_comp_idx);
     state->trans_mgr = (tm_transform_component_manager_o*)tm_entity_api->component_manager(state->entity_ctx, state->transform_comp_idx);
+    state->interactable_mgr = (tm_interactable_component_manager_o*)tm_entity_api->component_manager(state->entity_ctx, state->interact_comp_idx);
+
     state->player = tm_tag_component_api->find_first(state->tag_mgr, TM_STATIC_HASH("player", 0xafff68de8a0598dfULL));
     state->player_camera = tm_tag_component_api->find_first(state->tag_mgr, TM_STATIC_HASH("player_camera", 0x689cd442a211fda4ULL));
     tm_simulate_context_api->set_camera(state->simulate_ctx, state->player_camera);
@@ -129,35 +133,6 @@ static void stop(tm_simulate_state_o *state)
 
     tm_allocator_i a = *state->allocator;
     tm_free(&a, state, sizeof(*state));
-}
-
-static float door_open_speed = 1.0f;
-
-static void open_door(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
-{
-    if (!state->door_start_open_time)
-        return;
-
-    const float t = (float)(args->time - state->door_start_open_time)/door_open_speed;
-    const tm_vec4_t rot = tm_quaternion_mul(state->door_initial_rot, tm_quaternion_from_rotation((tm_vec3_t){ 0, 1, 0}, tm_lerp(0, state->door_end_angle, tm_min(t, 1))));
-    tm_set_local_rotation(state->trans_mgr, state->door, rot);
-}
-
-static float lever_move_speed = 0.3f;
-
-static void open_lever(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
-{
-    if (!state->lever_start_move_time)
-        return;
-
-    const float t = (float)(args->time - state->lever_start_move_time)/lever_move_speed;
-    const tm_vec4_t rot = tm_quaternion_mul(state->lever_initial_rot, tm_quaternion_from_rotation((tm_vec3_t){ 1, 0, 0}, tm_lerp(0, state->lever_end_angle, tm_min(t, 1))));
-    tm_set_local_rotation(state->trans_mgr, state->lever, rot);
-
-    if (t >= 1 && !state->door_start_open_time) {
-        state->door_end_angle = -TM_PI/2;
-        state->door_start_open_time = args->time;
-    }
 }
 
 static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
@@ -227,8 +202,7 @@ static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
             tm_application_api->set_cursor_hidden(tm_application_api->application(), true);
     }
 
-    open_lever(state, args);
-    open_door(state, args);
+    tm_interactable_component_api->update_active_interactables(state->interactable_mgr, args->dt, args->time);
 
     const tm_vec3_t camera_pos = tm_get_position(state->trans_mgr, state->player_camera);
     const tm_vec4_t camera_rot = tm_get_rotation(state->trans_mgr, state->player_camera);
@@ -296,22 +270,10 @@ static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     if (r.has_block) {
         const tm_entity_t hit = r.block.body;
         const tm_component_mask_t *hit_mask = tm_entity_api->component_mask(state->entity_ctx, hit);
-        if (tm_entity_mask_has_component(hit_mask, state->interact_comp_idx)) {
+        if (tm_entity_mask_has_component(hit_mask, state->interact_comp_idx) && tm_interactable_component_api->can_interact(state->interactable_mgr, hit)) {
             crosshair_color = (tm_color_srgb_t){ 255, 255, 255, 255 };
             if (state->input.left_mouse_pressed) {
-                tm_interactable_component_t *ic = tm_entity_api->get_component(state->entity_ctx, hit, state->interact_comp_idx);
-
-                if (ic->type == TM_INTERACTABLE_TYPE_LEVER) {
-                    state->lever_start_move_time = 0;
-                    state->door_start_open_time = 0;
-                    state->door = ic->lever.target; 
-                    state->door_initial_rot = tm_get_local_rotation(state->trans_mgr, state->door);
-
-                    state->lever = ic->lever.handle;
-                    state->lever_initial_rot = tm_get_local_rotation(state->trans_mgr, state->lever);
-                    state->lever_end_angle = TM_PI/5;
-                    state->lever_start_move_time = args->time;
-                }
+                tm_interactable_component_api->interact(state->interactable_mgr, hit);
             }
         }
     }
@@ -323,7 +285,6 @@ static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     tm_ui_api->to_draw_style(args->ui, style, args->uistyle);
     style->color = crosshair_color;
     tm_draw2d_api->fill_circle(uib.vbuffer, uib.ibuffers[TM_UI_BUFFER_MAIN], style, crosshair_pos, 3);
-
 }
 
 static tm_simulate_entry_i simulate_entry_i = {
