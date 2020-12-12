@@ -1,6 +1,6 @@
 __type: "tm_entity"
 __uuid: "7c7e43e4-3740-346b-499c-9ce8e3cf0de6"
-name: "prop_wall_big_door_iron"
+name: "iron_door"
 components: [
 	{
 		__type: "tm_entity_rigger_component"
@@ -141,6 +141,21 @@ children: [
 						y: 0.699999988079071
 						z: 0.07000000029802322
 					}
+				}
+			}
+			{
+				__type: "tm_interactable_component"
+				__uuid: "2633a70c-efef-95ea-3931-448624bdb589"
+				desc: {
+					__type: "tm_interactable_rotating_door"
+					__uuid: "a922f79f-01ee-cd38-e52a-155164a5fa4a"
+					pivot: "7c7e43e4-3740-346b-499c-9ce8e3cf0de6"
+					pivot_rotate_axis: {
+						__uuid: "75267fa7-3d3d-3ada-03bf-dadb65bc3122"
+						y: 1
+					}
+					pivot_rotate_angle: -90
+					pivot_rotate_time: 0.800000011920929
 				}
 			}
 		]

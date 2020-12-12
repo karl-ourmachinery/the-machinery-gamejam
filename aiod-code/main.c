@@ -270,7 +270,7 @@ static void tick(tm_simulate_state_o *state, tm_simulate_frame_args_t *args)
     if (r.has_block) {
         const tm_entity_t hit = r.block.body;
         const tm_component_mask_t *hit_mask = tm_entity_api->component_mask(state->entity_ctx, hit);
-        if (tm_entity_mask_has_component(hit_mask, state->interact_comp_idx) && tm_interactable_component_api->can_interact(state->interactable_mgr, hit)) {
+        if (tm_entity_mask_has_component(hit_mask, state->interact_comp_idx) && tm_interactable_component_api->can_interact(state->interactable_mgr, hit, true)) {
             crosshair_color = (tm_color_srgb_t){ 255, 255, 255, 255 };
             if (state->input.left_mouse_pressed) {
                 tm_interactable_component_api->interact(state->interactable_mgr, hit);
@@ -297,6 +297,7 @@ static tm_simulate_entry_i simulate_entry_i = {
 };
 
 extern void load_interactable_component(struct tm_api_registry_api* reg, bool load);
+extern void load_interactable_target_component(struct tm_api_registry_api* reg, bool load);
 
 TM_DLL_EXPORT void tm_load_plugin(struct tm_api_registry_api* reg, bool load)
 {
